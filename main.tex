@@ -1,0 +1,741 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{setspace}
+\setstretch{1.12}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{silence}
+\WarningFilter{latex}{Command \\showhyphens has changed}
+\WarningFilter{caption}{The option `hypcap=true' will be ignored}
+\usepackage{needspace}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm} % for \mathbbm{1} (indicator function)
+\usepackage{csquotes}
+
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{siunitx}
+\sisetup{detect-weight=true, detect-family=true}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pdflscape}
+\usepackage{adjustbox}
+
+\usepackage{pgfplotstable}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\usepackage[hidelinks]{hyperref}
+\usepackage[backend=biber,style=authoryear,maxcitenames=2,maxbibnames=99]{biblatex}
+\addbibresource{references.bib}
+
+\providecommand{\toprule}{\hline\hline}
+\providecommand{\midrule}{\hline}
+\providecommand{\bottomrule}{\hline\hline}
+
+\newcommand{\CHE}{\textsc{CHE}}
+\newcommand{\OECD}{\textsc{OECD}}
+
+\newcommand{\ReplicationDOI}{10.5281/zenodo.18649102}
+\newcommand{\ReplicationURL}{https://doi.org/\ReplicationDOI}
+
+\newcommand{\IncludeGraphicOrBox}[2][]{%
+  \IfFileExists{#2}{%
+    \includegraphics[#1]{#2}%
+  }{%
+    \fbox{\parbox{0.92\linewidth}{\centering Missing file: \texttt{\detokenize{#2}}}}%
+  }%
+}
+
+\newenvironment{FitTable}{\begin{adjustbox}{max width=\textwidth,center}\small}{\end{adjustbox}}
+% Wide rotated tables have ample space; keep them at normal text size.
+\newenvironment{WideTable}{\begin{adjustbox}{max width=\textwidth,center}\large}{\end{adjustbox}}
+\newenvironment{RotCaptionedTable}[2]{%
+  \Needspace*{18\baselineskip}%
+  \par\noindent\centering%
+  \begin{adjustbox}{angle=90, max width=\textheight, max totalheight=\textwidth, center}%
+  \begin{minipage}{\textheight}%
+  \captionsetup{hypcap=false}%
+  \captionof{table}{#1}\label{#2}%
+  \vspace{0.6em}%
+}{%
+  \end{minipage}%
+  \end{adjustbox}%
+  \par%
+}
+
+
+\title{\vspace{-1.2em}\textbf{The Economics of Inheritance and Inter-Vivos Gifts: \\
+A Switzerland-Focused Macro Evidence Base from OECD Revenue Statistics (4300)}}
+\author{Eduardo Dietrich Zimmermann\thanks{Working paper. Replication package (data, code, and outputs) is available at \href{\ReplicationURL}{doi:\ReplicationDOI}.}}
+\date{February 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Inheritance and inter-vivos gifts are central mechanisms of wealth transmission and a core object of public economics: they shape inequality dynamics, interact with bequest motives, and raise fundamental questions for tax design. Switzerland is a high-leverage setting for studying these mechanisms because it combines high private wealth with strong fiscal federalism, where inheritance and gift taxes are largely cantonal.
+
+This paper develops a Switzerland-focused empirical narrative using a harmonized long-run panel constructed from OECD Revenue Statistics for estate, inheritance and gift taxes (tax code 4300, with sub-codes 4310 and 4320 where separately reported). The empirical contribution is twofold. First, the paper benchmarks Swiss inheritance-and-gift tax revenues in levels and shares, and places 4300 within the broader property-tax mix (4000), jointly with recurrent net wealth taxes (4200) and residual property taxes. Second, it implements transparent summary statistics that quantify whether Switzerland's position has drifted relative to peers: (i) a two-way fixed-effects ``Switzerland $\times$ trend'' specification, and (ii) exact placebo (randomization-inference) distributions for treated-minus-others differences computed over a long window (1990--2022) and over a recent window (2018--2022).
+
+The goal is not to claim causal identification of Swiss policy effects from revenue aggregates. Rather, the paper provides a measurement-disciplined macro evidence base that clarifies what aggregate revenue series can and cannot tell, and that motivates a microdata agenda where cantonal variation can credibly identify behavioral mechanisms in inheritance and inter-vivos giving.
+\end{abstract}
+
+\vspace{0.5em}
+\noindent\textbf{Replication package:} \href{\ReplicationURL}{doi:\ReplicationDOI}.\\
+\textbf{Keywords:} inheritance; inter-vivos gifts; bequest motives; wealth inequality; tax design; Switzerland; OECD revenue statistics.\\
+\textbf{JEL codes:} H24, H31, H23, D31, D64.
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introduction}
+Wealth transmission through inheritance and inter-vivos gifts is simultaneously a private family decision and a public economic phenomenon. Economically, transfers link lifecycle saving and precautionary motives to intergenerational persistence \parencite{Aiyagari1994,DeNardi2004,DeNardiYang2016}. Distributionally, transfers contribute to the accumulation and persistence of wealth concentration \parencite{Piketty2014,PikettyZucman2015,SaezZucman2016}. Normatively, transfers raise foundational questions about equality of opportunity and the design of taxes on capital and wealth \parencite{AtkinsonStiglitz1976,Mirrlees2011,PikettySaez2013}.
+
+Switzerland is a natural focal point for these questions because inheritance and gift taxes are primarily levied at the cantonal (and sometimes communal) level, and tax rules and rates vary substantially across cantons \parencite{EFDJUSO2024}. This institutional setting has two first-order implications. First, it creates rich within-country variation that can be exploited for causal inference with administrative microdata. Second, it makes national-level revenue aggregates a meaningful but incomplete object: they summarize the net effect of policy heterogeneity and reforms across cantons, but they do not directly measure transfer flows.
+
+\subsection{Why start with macro revenue evidence?}
+The core scientific questions in this field are microeconomic: \emph{who} gives and receives gifts, \emph{how} bequest motives differ across households, \emph{how} behavioral margins respond to taxes (timing, avoidance, mobility), and \emph{what} the distributional and welfare consequences are. Aggregate revenue series cannot answer these questions directly. Nevertheless, a carefully constructed macro evidence base is useful for three reasons.
+
+First, macro series provide a disciplined cross-country benchmark. Any narrative about Switzerland being ``high-tax'' or ``low-tax'' on inheritances and gifts should be anchored in comparable data that places Switzerland within the property-tax mix and the overall tax system. Second, macro series clarify measurement concepts and limitations. Revenues conflate tax bases, statutory schedules, exemptions, compliance, and macro denominators (GDP or total tax revenue). Making these layers explicit prevents over-interpretation and helps identify which objects must be measured with microdata. Third, macro evidence can guide empirical priorities. If inheritance-and-gift taxes are fiscally small (as a share of total tax revenue) but politically salient, the research agenda should focus on distributional incidence and behavioral margins rather than on aggregate revenue maximization.
+
+\subsection{What this paper does}
+Using OECD Revenue Statistics data, this paper performs four tasks:
+\begin{enumerate}
+  \item \textbf{Benchmarking in levels and shares.} It documents the time series of inheritance-and-gift tax revenues (4300) in Switzerland relative to the OECD average and selected comparators, reporting both \%GDP levels and shares of total tax revenue.
+  \item \textbf{Position in the property-tax mix.} It places 4300 within property taxes (4000), alongside recurrent net wealth taxes (4200) and other property-tax components, highlighting Switzerland's distinctive profile.
+  \item \textbf{Trend summary with transparent controls.} It estimates a descriptive two-way fixed effects model that summarizes whether Switzerland's relative position has drifted over time after absorbing common year shocks and time-invariant country differences.
+  \item \textbf{Cross-sectional extremeness via exact placebo.} It constructs exact placebo distributions for treated-minus-others differences in 4300 outcomes computed over 1990--2022 (principal) and 2018--2022 (robustness), providing an assumption-light depiction of Switzerland's cross-sectional positioning.
+\end{enumerate}
+
+\subsection{Main message}
+The headline message is interpretive rather than causal: Switzerland often lies above the OECD average in levels, yet descriptive fixed-effects summaries can indicate relative convergence over time. Macro revenue data cannot identify mechanisms behind such drift. The policy-relevant mechanisms---cantonal tax competition, changes in exemptions for close relatives, tax planning and gift substitution, and mobility responses---must be investigated with Swiss microdata. The macro evidence here is designed to motivate and structure that microdata agenda.
+
+\subsection{Conceptual map: flows, stocks, and revenues}
+It is useful to separate three objects that are often conflated in public debates:
+\begin{enumerate}
+  \item \textbf{Transfer flows.} The economic quantity of interest for many questions is the flow of intergenerational transfers: inheritances at death plus inter-vivos gifts.
+  \item \textbf{Wealth stocks.} Wealth stocks determine the potential size of future transfers and are central for inequality measurement.
+  \item \textbf{Tax revenues.} Revenues from inheritance and gift taxes combine transfer flows with schedules, exemptions, valuation rules, reporting, avoidance, and macro denominators (GDP or total tax revenue).
+\end{enumerate}
+This paper operates at the revenue layer and uses it to discipline inferences and to specify the objects that require microdata.
+
+\section{Institutional background: Switzerland}
+\label{sec:institution}
+
+\subsection{Fiscal federalism and decentralized transfer taxation}
+Switzerland is a federation where cantons have broad tax autonomy. Inheritance and gift taxes are emblematic: the Swiss Confederation does not levy a broad federal inheritance tax, while most cantons levy inheritance taxes and many also levy gift taxes \parencite{EFDJUSO2024}. Decentralization implies that national outcomes aggregate heterogeneous policies; it also suggests that credible identification strategies should exploit within-country reforms and cross-canton comparisons rather than cross-country identification alone.
+
+\subsection{Why decentralization matters for behavior}
+Decentralization shapes behavioral responses in at least two ways. First, households can respond to higher transfer taxes through mobility (across cantons or before death). Second, decentralization can foster tax competition, potentially leading to reductions or abolition of bequest taxes when cantons perceive their base to be mobile. Swiss evidence highlights how tax-competition narratives can contribute to the erosion of bequest taxes \parencite{BrulhartParchet2014}. Aggregate revenue series cannot identify these mechanisms, but they can reveal their macro footprint.
+
+\subsection{Policy debate relevance}
+Political initiatives periodically propose introducing a federal inheritance tax at high rates for very large estates, often motivated by distributional objectives. Background material from the Swiss federal administration highlights the institutional status quo and considerations surrounding such initiatives \parencite{EFDJUSO2024}. Even when inheritance and gift taxes represent a small share of total revenue, they may be highly salient because they target wealth concentration and may trigger mobility and planning responses among the very wealthy.
+
+\section{Related literature}
+\label{sec:lit}
+
+\subsection{Inheritance, wealth accumulation, and inequality}
+Long-run evidence documents that inheritances can contribute substantially to aggregate wealth formation, particularly in periods where the return on capital exceeds growth \parencite{Piketty2014,PikettyZucman2015}. Empirical work quantifies inherited wealth shares across countries and over time \parencite{AlvaredoGarbintiPiketty2017}. At the distributional level, evidence based on capitalized income tax data emphasizes wealth concentration dynamics \parencite{SaezZucman2016}. This literature motivates the study of intergenerational transfers in modern economies.
+
+\subsection{Bequest motives and inter-vivos gifts}
+Transfers reflect heterogeneous motives. Some are accidental, arising from precautionary saving under longevity and health risk \parencite{Aiyagari1994,DeNardi2004}. Others are intentional, driven by altruism, strategic considerations, or legacy preferences \parencite{Bernheim1991,KopczukLupton2007}. Inter-vivos gifts can serve multiple purposes and can substitute for bequests; tax policy can affect the timing of transfers \parencite{Joulfaian2004}. Understanding motives and substitution patterns is essential for interpreting transfer taxation.
+
+\subsection{Taxation of transfers: theory and evidence}
+Transfer taxation sits within broader public finance. Classic results on tax structure provide a baseline \parencite{AtkinsonStiglitz1976,Mirrlees2011}. Inheritance taxation has been studied as an instrument to address intergenerational inequality and as a tax on a potentially less distortive base depending on motives and elasticities \parencite{PikettySaez2013,FarhiWerning2013}. Surveys emphasize avoidance and planning behavior and the difficulty of separating base changes from schedule changes in revenue data \parencite{Kopczuk2009,CremerPestieau2011}.
+
+\subsection{Mobility and tax competition}
+A large empirical literature studies migration responses to taxes \parencite{KlevenLandaisSaez2013,YoungVarner2011,MorettiWilson2017}. Switzerland is institutionally distinct but highly relevant: cantonal autonomy makes mobility a salient concern for transfer taxation, and Swiss evidence links bequest tax erosion to tax-competition narratives \parencite{BrulhartParchet2014}.
+
+\section{Data and measurement}
+\label{sec:data}
+
+\subsection{OECD Revenue Statistics classification and the 4300 code}
+The core data source is OECD Revenue Statistics, which classifies taxes in a harmonized system. Estate, inheritance and gift taxes are grouped under code 4300; subcode 4310 covers estate and inheritance taxes and 4320 covers gift taxes where separately reported \parencite{OECDInterpretativeGuide,OECDRevenueStatsGuide}. Property taxes are grouped under 4000 and include recurrent taxes on net wealth (4200) and other property-tax components.
+
+\subsection{Outcomes and constructed ratios}
+The paper focuses on two outcomes:
+\begin{enumerate}
+  \item \textbf{Level:} $T_{4300}$, the 4300 revenue as a percent of GDP.
+  \item \textbf{Share:} $100 \times T_{4300}/\_T$, the 4300 share of total tax revenue (constructed from $T_{4300}$ and total tax revenue $\_T$).
+\end{enumerate}
+To interpret 4300 in the property-tax system, the analysis also uses within-4000 shares (e.g., $T_{4300}/T_{4000}$ and $T_{4200}/T_{4000}$). These ratios clarify whether a country relies primarily on recurrent wealth taxation, recurrent immovable property taxation, or transfer taxation to raise property-related revenue.
+
+\subsection{Country codes and comparators}
+Figures use ISO3 country codes (e.g., \CHE{} for Switzerland) to ensure readability across plots and tables. A code-to-name glossary generated by the replication package is provided in Appendix~\ref{app:glossary}.
+
+\section{Data diagnostics and coverage}
+\label{sec:diagnostics}
+
+Cross-country work on inheritance and gift taxation faces comparability challenges. Countries differ in (i) central vs.\ subnational taxation; (ii) whether gifts are taxed and separately reported; (iii) valuation and exemptions; and (iv) reporting practices. The OECD interpretative guide emphasizes that classification harmonizes categories, while institutional heterogeneity remains \parencite{OECDInterpretativeGuide,OECDRevenueStatsGuide}.
+
+\subsection{Reporting heterogeneity: 4300 vs.\ 4310/4320}
+Many countries report 4300 without a clean split into 4310 (inheritance/estate) and 4320 (gifts). This may reflect integrated regimes, absence of gift taxation, or limited reporting. Accordingly:
+\begin{itemize}
+  \item The main descriptive and econometric summaries focus on 4300, which has broader availability.
+  \item The inheritance-vs-gifts decomposition is presented as descriptive and conditional on reporting.
+  \item When gifts are not separately reported, the ``gifts'' component should be interpreted as ``not separately identified'' rather than as true zero gifts.
+\end{itemize}
+
+\subsection{A geographic heatmap (Europe focus)}
+To visualize the cross-sectional pattern in recent years with a Switzerland-centered geographic lens, the replication package produces a Europe-focused choropleth map for the 2018--2022 average 4300 share of total tax revenue (when map dependencies are available), with a Tableau-ready fallback table otherwise.
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/fig5_map_europe_4300_share_total_2018_2022.png}
+\caption{OECD inheritance \& gift taxes (4300): Europe-focused map of 2018--2022 average share of total tax revenue (where available).}
+\label{fig:map_europe}
+\end{figure}
+
+\section{Descriptive evidence: Switzerland in OECD perspective}
+\label{sec:descriptive}
+
+\subsection{Time-series benchmarking: levels and shares}
+Figure~\ref{fig:timeseries_che} reports two panels: (i) $T_{4300}$ as \% of GDP, and (ii) $T_{4300}$ as a share of total tax revenue. Switzerland is highlighted against the OECD aggregate and a small set of comparators.
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/fig1_timeseries_CHE_focus.png}
+\caption{Inheritance \& gift tax revenues (4300): Switzerland vs.\ OECD aggregate and selected comparators (levels and shares).}
+\label{fig:timeseries_che}
+\end{figure}
+
+\subsection{Cross-sectional dispersion (main view vs.\ full OECD)}
+Inheritance-and-gift tax shares vary widely across countries. Figure~\ref{fig:boxplot_main} reports the main view (top 15 by median plus Switzerland, OECD aggregate, and comparators). Appendix Figure~\ref{fig:boxplot_full} reports the full OECD distribution to avoid any interpretation of cherry-picking. Appendix Figure~\ref{fig:scatter_che} provides an additional scatter view of cross-sectional positioning.
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/fig2_boxplot_4300_share_total_main.png}
+\caption{Distribution of 4300 as share of total tax revenue (1990--2022): main view (top 15 by median + key comparators).}
+\label{fig:boxplot_main}
+\end{figure}
+
+\subsection{Inheritance and gifts within the property-tax mix}
+Inheritance and gift taxes are one component of property taxation. Figure~\ref{fig:mix_main} shows the 2018--2022 average property-tax mix (within 4000): net wealth taxes (4200), inheritance \& gifts (4300), and residual property taxes. Appendix Figure~\ref{fig:mix_full_recent} reports the full OECD version for 2018--2022; Appendix Figure~\ref{fig:mix_full_long} reports the full OECD version for 1990--2022 averages.
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/fig3_property_tax_mix_2018_2022_main.png}
+\caption{Property-tax mix (within 4000): 2018--2022 average shares (main view).}
+\label{fig:mix_main}
+\end{figure}
+
+\subsection{Inside 4300: inheritance vs inter-vivos gifts}
+Where separately reported, 4300 can be decomposed into inheritance/estate (4310) and gifts (4320). Figure~\ref{fig:split_main} reports the main view for 2018--2022; appendix figures provide full OECD views and long-window averages. When gifts are not separately reported, the ``gifts'' component should be interpreted as a residual ``not separately identified'' component rather than a true zero.
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/fig4_inheritance_vs_gifts_2018_2022_main.png}
+\caption{Inside 4300 (2018--2022): inheritance (4310) vs inter-vivos gifts (4320), where separately reported (main view).}
+\label{fig:split_main}
+\end{figure}
+
+\section{Empirical strategy}
+\label{sec:strategy}
+
+\subsection{A descriptive \texorpdfstring{Switzerland$\times$trend}{Switzerland x trend} model}
+To summarize whether Switzerland's position has drifted relative to peers after absorbing common shocks, the paper estimates a two-way fixed effects specification:
+\[
+ y_{ct} = \alpha_c + \delta_t + \beta \left(\mathbbm{1}\{c=\text{CHE}\} \times (t - t_0)\right) + \varepsilon_{ct},
+\]
+where $y_{ct}$ is $T_{4300}$ (\% of GDP) or the 4300 share of total tax revenue; $\alpha_c$ are country fixed effects; $\delta_t$ are year fixed effects; and $t_0$ is a baseline year. The parameter $\beta$ captures the Switzerland-specific differential linear trend relative to the common year effects. Standard errors are clustered by country.
+
+This specification is a compact descriptive summary. It is not a causal estimate of a specific reform; it is used to communicate whether Switzerland has converged toward or diverged from the common international pattern after netting out global year shocks and time-invariant country differences.
+
+\subsection{Exact placebo (randomization inference) for cross-sectional differences}
+To assess whether Switzerland is an outlier without relying on parametric approximations, the paper constructs treated-minus-others mean differences and an exact placebo distribution by treating each country as Switzerland once. Two windows are reported:
+\begin{enumerate}
+  \item \textbf{1990--2022 (principal):} a long-window summary that emphasizes long-run positioning.
+  \item \textbf{2018--2022 (robustness):} a recent-window summary aligned with contemporary cross-sectional comparisons.
+\end{enumerate}
+Exact two-sided p-values are computed as the share of placebo differences with absolute value at least as large as Switzerland's observed difference.
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Differential trends: Switzerland relative to peers}
+Table~\ref{tab:spec_comp} reports the Switzerland$\times$trend coefficient from the two-way fixed-effects specification, along with comparison specifications (RE and pooled OLS with year effects) produced by the Stata replication do-file.
+
+\begin{table}[!htbp]
+\centering
+\caption{Specification comparison: Switzerland$\times$trend coefficient (Stata outputs).}
+\label{tab:spec_comp}
+\IfFileExists{outputs/stata/tables/tableA_spec_comparison_che_trend.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{4pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={outcome,estimator,term,b,se,p,N},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/estimator/.style={string type, column name=Specification},
+  columns/term/.style={string type, column name=Term},
+  columns/b/.style={column name={$b$}, fixed, precision=4},
+  columns/se/.style={column name={s.e.}, fixed, precision=4},
+  columns/p/.style={column name={$p$}, fixed, precision=4},
+  columns/N/.style={column name={$N$}, fixed, precision=0}
+]{outputs/stata/tables/tableA_spec_comparison_che_trend.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{0.96\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableA_spec_comparison_che_trend.csv}}}}
+}
+\end{table}
+
+\subsection{FE vs RE diagnostics (Hausman and CRE/Mundlak)}
+Because FE/RE comparisons can be sensitive to specification details, the replication package exports both a simple Hausman test (without year dummies to avoid negative chi-squared pathologies) and an additional CRE/Mundlak-style diagnostic.
+
+\begin{table}[!htbp]
+\centering
+\caption{FE vs RE diagnostics (Stata outputs).}
+\label{tab:hausman}
+\IfFileExists{outputs/stata/tables/tableB_hausman_fe_re_simple.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{5pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/spec/.style={string type, column name=Specification},
+  columns/chi2/.style={column name={$\chi^2$}, fixed, precision=4},
+  columns/df/.style={column name={df}, fixed, precision=0},
+  columns/p_value/.style={column name={$p$}, fixed, precision=4}
+]{outputs/stata/tables/tableB_hausman_fe_re_simple.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{0.96\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableB_hausman_fe_re_simple.csv}}}}
+}
+
+\vspace{0.8em}
+
+\IfFileExists{outputs/stata/tables/tableB2_mundlak_cre_test.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{5pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/test/.style={string type, column name=Test},
+  columns/p_value/.style={column name={$p$}, fixed, precision=4},
+  columns/N/.style={column name={$N$}, fixed, precision=0}
+]{outputs/stata/tables/tableB2_mundlak_cre_test.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{0.96\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableB2_mundlak_cre_test.csv}}}}
+}
+\end{table}
+
+\subsection{Exact placebo distributions: long window and recent window}
+Figures~\ref{fig:placebo_long} and \ref{fig:placebo_recent} report placebo distributions for two outcomes: $T_{4300}$ (\%GDP) and the 4300 share of total tax revenue.
+
+\begin{figure}[!htbp]
+\centering
+\begin{subfigure}[t]{0.49\linewidth}
+\centering
+\IncludeGraphicOrBox[width=\linewidth]{outputs/stata/figures/figC_placebo_T_4300_1990_2022.png}
+\caption{$T_{4300}$ (\%GDP), 1990--2022}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}
+\centering
+\IncludeGraphicOrBox[width=\linewidth]{outputs/stata/figures/figC_placebo_share4300_total_1990_2022.png}
+\caption{4300 share of total tax, 1990--2022}
+\end{subfigure}
+\caption{Exact placebo distributions (principal window). Switzerland highlighted in each panel.}
+\label{fig:placebo_long}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\begin{subfigure}[t]{0.49\linewidth}
+\centering
+\IncludeGraphicOrBox[width=\linewidth]{outputs/stata/figures/figC_placebo_T_4300_2018_2022.png}
+\caption{$T_{4300}$ (\%GDP), 2018--2022}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}
+\centering
+\IncludeGraphicOrBox[width=\linewidth]{outputs/stata/figures/figC_placebo_share4300_total_2018_2022.png}
+\caption{4300 share of total tax, 2018--2022}
+\end{subfigure}
+\caption{Exact placebo distributions (recent window). Switzerland highlighted in each panel.}
+\label{fig:placebo_recent}
+\end{figure}
+
+\subsection{Interpretation: what the results mean (and do not mean)}
+The results support bounded conclusions. First, Switzerland's macro positioning can be benchmarked transparently in levels, shares, and within the property-tax mix. Second, compact descriptive summaries can indicate whether Switzerland exhibits relative convergence or divergence once common year shocks and time-invariant country differences are netted out. However, because revenues confound bases and schedules and are affected by compliance, valuation, and avoidance, these patterns do not identify changes in inheritance flows, do not reveal bequest motives, and do not isolate behavioral responses. They should be read as disciplined macro context and motivation for microdata analysis.
+
+\section{Robustness and sensitivity}
+\label{sec:robust}
+
+\subsection{Alternative benchmarks: ratio-of-means vs mean-of-ratios}
+Group benchmarks can be constructed as ratio-of-means (compute group means of numerator and denominator then take shares) or as mean-of-ratios (compute country-level shares then average). These answer distinct questions. The replication package adopts internally consistent constructions for the main time-series benchmarking and reports cross-sectional distributions explicitly to separate accounting from dispersion.
+
+\subsection{Alternative time windows and structural breaks}
+The two-way FE specification imposes a linear differential trend. This is a convenient summary but may be misleading if Switzerland's path contains structural breaks or if the global trajectory is nonlinear. The replication structure supports windowed trends and event-style designs; in a Swiss setting, those extensions are substantially more informative at the canton-year level rather than at the country-year level.
+
+\subsection{Country-only filters}
+Depending on the OECD extract, non-country aggregates can appear. The replication do-file filters to ISO3 country codes (with \OECD{} aggregate handled explicitly) to avoid contaminating ``others'' benchmarks and placebo distributions.
+
+\section{Scope, limitations, and interpretation boundaries}
+\label{sec:limits}
+
+This paper is designed as a complete macro evidence base rather than as a causal policy evaluation. Its scope and limitations are explicit:
+
+\begin{enumerate}
+  \item \textbf{Revenues are outcomes, not primitives.} OECD revenue series reflect bases, schedules, exemptions, valuation rules, compliance, avoidance/planning, and macro denominators. Consequently, they do not identify transfer flows or behavioral elasticities.
+  \item \textbf{Subnational aggregation.} In Switzerland, 4300 aggregates heterogeneous cantonal regimes. National series are meaningful for fiscal footprint but are not the right unit for identifying cantonal mechanisms.
+  \item \textbf{Reporting heterogeneity for 4310/4320.} Gifts are not consistently separately reported. ``Zero'' in 4320 should not be interpreted as ``no gifting'' without institutional validation; it often means ``not separately identified''.
+  \item \textbf{No weighting by size in the baseline.} Unweighted cross-country benchmarks describe the ``typical'' OECD member. Size-weighted benchmarks (by GDP or population) are informative but represent a distinct object; they are left as an extension.
+  \item \textbf{Macro-level identification is not attempted.} The two-way FE and placebo exercises are descriptive summaries and should not be interpreted as identifying causal effects of policy changes.
+\end{enumerate}
+
+\section{Conclusion}
+Inheritance and inter-vivos gifts are central to the transmission of wealth and to policy debates on inequality, opportunity, and capital taxation. Switzerland is a high-leverage setting for studying these mechanisms because transfer taxation is largely decentralized and operates alongside recurrent net wealth taxation within a broader property-tax system.
+
+This paper builds a Switzerland-focused \emph{macro evidence base} from OECD Revenue Statistics (tax code 4300). The replication package constructs a harmonized long-run country-year panel, documents coverage and reporting heterogeneity (including the limited availability of separate 4310/4320 reporting), and produces a consistent set of figures and tables that locate Switzerland within the OECD distribution. The descriptive analysis proceeds in four steps: (i) time-series benchmarking of 4300 revenues in levels (\%GDP) and as shares of total tax revenue; (ii) positioning of 4300 within the property-tax mix (4000), alongside recurrent net wealth taxes (4200) and residual property taxes; (iii) a compact two-way fixed-effects Switzerland$\times$trend specification that summarizes relative drift after absorbing common year shocks and time-invariant country differences; and (iv) exact placebo (randomization-inference) distributions for treated-minus-others mean differences over a long window (1990--2022) and a recent window (2018--2022), reported for both levels and shares.
+
+The substantive output is interpretive rather than causal. Revenue aggregates provide a disciplined way to benchmark fiscal footprints and cross-country positioning, but they confound transfer flows with statutory schedules, exemptions, valuation, compliance, and avoidance/planning. In a decentralized setting, national 4300 revenues are informative about the \emph{aggregate} footprint of heterogeneous cantonal regimes, yet they are not the right unit for identifying behavioral mechanisms. For that reason, the paper treats macro evidence as context and measurement discipline: it clarifies what aggregate revenue series can and cannot speak to, and it specifies the objects that must be measured with microdata to answer core questions about bequest motives, inter-vivos giving, and behavioral responses to transfer taxation.
+
+\subsection{Future research directions}
+Two extensions follow naturally from the measurement structure developed here.
+
+\subsubsection{Cross-cantonal Switzerland replication}
+The macro objects in this paper (levels, shares, and property-tax mix positioning) can be reproduced within Switzerland at the canton level using cantonal fiscal accounts and administrative tax records. This would shift the unit from country-year to canton-year, making decentralization a source of identification rather than a source of aggregation noise. Such an extension can also clarify the joint role of wealth taxation (4200-type mechanisms) and transfer taxation in Swiss fiscal design.
+
+\subsubsection{Linking revenues to flows and behavior with microdata}
+The key scientific agenda is to measure inheritance flows and inter-vivos gifts directly and to estimate behavioral responses to cantonal policy variation (timing, avoidance/planning, and mobility). A macro--micro reconciliation step (aggregating micro liabilities to match canton and national revenues) provides a disciplined validation benchmark.
+
+
+\newpage
+\printbibliography
+
+\appendix
+\newpage
+
+\section{Additional figures}
+\label{app:figs}
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/figA1_scatter_CHE_position.png}
+\caption{Cross-sectional positioning (2018--2022 averages): Switzerland highlighted.}
+\label{fig:scatter_che}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/figA2_boxplot_4300_share_total_full_oecd.png}
+\caption{Distribution of 4300 share of total tax revenue (1990--2022): full OECD (appendix).}
+\label{fig:boxplot_full}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/figA3_property_tax_mix_2018_2022_full_oecd.png}
+\caption{Property-tax mix (within 4000): 2018--2022 average shares (full OECD).}
+\label{fig:mix_full_recent}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/figA3b_property_tax_mix_1990_2022_full_oecd.png}
+\caption{Property-tax mix (within 4000): 1990--2022 average shares (full OECD).}
+\label{fig:mix_full_long}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/figA4_inheritance_vs_gifts_2018_2022_full_oecd.png}
+\caption{Inside 4300 (2018--2022): inheritance vs gifts (full OECD; where separately reported).}
+\label{fig:split_full_recent}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\IncludeGraphicOrBox[width=0.92\linewidth]{outputs/figures/figA4b_inheritance_vs_gifts_1990_2022_full_oecd.png}
+\caption{Inside 4300 (1990--2022): inheritance vs gifts (full OECD; where separately reported).}
+\label{fig:split_full_long}
+\end{figure}
+
+\newpage
+\section{ISO3 glossary (country codes used in figures)}
+\label{app:glossary}
+
+\begin{table}[!htbp]
+\centering
+\caption{ISO3 country codes used in figures.}
+\IfFileExists{outputs/tables/country_iso3_glossary.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{6pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns/country_code/.style={string type, column name=Code},
+  columns/country_name/.style={string type, column name=Country}
+]{outputs/tables/country_iso3_glossary.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/tables/country_iso3_glossary.csv}}}}
+}
+\end{table}
+
+\newpage
+\clearpage
+\Needspace*{20\baselineskip}
+\section{Key descriptive tables (R outputs)}
+\label{app:tables}
+
+\begin{RotCaptionedTable}{2018--2022 averages: levels and shares (main view).}{tab:table1_levels_shares}
+\IfFileExists{outputs/tables/table1_2018_2022_levels_shares_main.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{5pt}
+\begin{WideTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={country_code,T4300_pct_gdp,T4300_share_total_tax_pct,T4300_share_property_tax_pct,property_tax_share_total_tax_pct},
+  columns/country_code/.style={string type, column name=Code},
+  columns/T4300_pct_gdp/.style={column name={$T_{4300}$ (\% GDP)}, fixed, precision=4},
+  columns/T4300_share_total_tax_pct/.style={column name={\shortstack{4300 share\\total tax (\%)}}, fixed, precision=4},
+  columns/T4300_share_property_tax_pct/.style={column name={\shortstack{4300 within\\4000 (\%)}}, fixed, precision=4},
+  columns/property_tax_share_total_tax_pct/.style={column name={\shortstack{4000 share\\total tax (\%)}}, fixed, precision=4}
+]{outputs/tables/table1_2018_2022_levels_shares_main.csv}
+\end{WideTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/tables/table1_2018_2022_levels_shares_main.csv}}}}
+}
+\end{RotCaptionedTable}
+
+\vspace{1.2em}
+
+\begin{RotCaptionedTable}{2018--2022 split within 4300: inheritance vs gifts (main view; where available).}{tab:table2_split}
+\IfFileExists{outputs/tables/table2_gifts_vs_inheritance_2018_2022_main.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{5pt}
+\begin{WideTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={country_code,inheritance_share,gifts_share,note},
+  columns/country_code/.style={string type, column name=Code},
+  columns/inheritance_share/.style={column name=Inheritance share, fixed, precision=4},
+  columns/gifts_share/.style={column name=Gifts share, fixed, precision=4},
+  columns/note/.style={string type, column name=Reporting note}
+]{outputs/tables/table2_gifts_vs_inheritance_2018_2022_main.csv}
+\end{WideTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/tables/table2_gifts_vs_inheritance_2018_2022_main.csv}}}}
+}
+\end{RotCaptionedTable}
+
+\clearpage
+\section{Econometrics appendix (Stata outputs)}
+\label{app:stata}
+
+\subsection{Placebo summaries}
+
+\begin{table}[!htbp]
+\centering
+\caption{Placebo summary: $T_{4300}$ (\%GDP).}
+\label{tab:placebo_summary_T4300}
+\IfFileExists{outputs/stata/tables/tableC_placebo_summary_T_4300_1990_2022.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{4pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={period,outcome,obs_che_mean,obs_oth_mean,obs_diff_che_minus_oth,p_exact_two_sided},
+  columns/period/.style={string type, column name=Period},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/obs_che_mean/.style={column name={CHE mean}, fixed, precision=4},
+  columns/obs_oth_mean/.style={column name={Other mean}, fixed, precision=4},
+  columns/obs_diff_che_minus_oth/.style={column name={Diff. (CHE$-$Other)}, fixed, precision=4},
+  columns/p_exact_two_sided/.style={column name={$p$ (two-sided)}, fixed, precision=4}
+]{outputs/stata/tables/tableC_placebo_summary_T_4300_1990_2022.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableC_placebo_summary_T_4300_1990_2022.csv}}}}
+}
+
+\vspace{0.8em}
+
+\IfFileExists{outputs/stata/tables/tableC_placebo_summary_T_4300_2018_2022.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{4pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={period,outcome,obs_che_mean,obs_oth_mean,obs_diff_che_minus_oth,p_exact_two_sided},
+  columns/period/.style={string type, column name=Period},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/obs_che_mean/.style={column name={CHE mean}, fixed, precision=4},
+  columns/obs_oth_mean/.style={column name={Other mean}, fixed, precision=4},
+  columns/obs_diff_che_minus_oth/.style={column name={Diff. (CHE$-$Other)}, fixed, precision=4},
+  columns/p_exact_two_sided/.style={column name={$p$ (two-sided)}, fixed, precision=4}
+]{outputs/stata/tables/tableC_placebo_summary_T_4300_2018_2022.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableC_placebo_summary_T_4300_2018_2022.csv}}}}
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{Placebo summary: 4300 share of total tax revenue.}
+\label{tab:placebo_summary_share}
+\IfFileExists{outputs/stata/tables/tableC_placebo_summary_share4300_total_1990_2022.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{4pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={period,outcome,obs_che_mean,obs_oth_mean,obs_diff_che_minus_oth,p_exact_two_sided},
+  columns/period/.style={string type, column name=Period},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/obs_che_mean/.style={column name={CHE mean}, fixed, precision=4},
+  columns/obs_oth_mean/.style={column name={Other mean}, fixed, precision=4},
+  columns/obs_diff_che_minus_oth/.style={column name={Diff. (CHE$-$Other)}, fixed, precision=4},
+  columns/p_exact_two_sided/.style={column name={$p$ (two-sided)}, fixed, precision=4}
+]{outputs/stata/tables/tableC_placebo_summary_share4300_total_1990_2022.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableC_placebo_summary_share4300_total_1990_2022.csv}}}}
+}
+
+\vspace{0.8em}
+
+\IfFileExists{outputs/stata/tables/tableC_placebo_summary_share4300_total_2018_2022.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{4pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={period,outcome,obs_che_mean,obs_oth_mean,obs_diff_che_minus_oth,p_exact_two_sided},
+  columns/period/.style={string type, column name=Period},
+  columns/outcome/.style={string type, column name=Outcome},
+  columns/obs_che_mean/.style={column name={CHE mean}, fixed, precision=4},
+  columns/obs_oth_mean/.style={column name={Other mean}, fixed, precision=4},
+  columns/obs_diff_che_minus_oth/.style={column name={Diff. (CHE$-$Other)}, fixed, precision=4},
+  columns/p_exact_two_sided/.style={column name={$p$ (two-sided)}, fixed, precision=4}
+]{outputs/stata/tables/tableC_placebo_summary_share4300_total_2018_2022.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableC_placebo_summary_share4300_total_2018_2022.csv}}}}
+}
+\end{table}
+
+\subsection{Descriptive tables (Stata outputs)}
+
+\begin{table}[!htbp]
+\centering
+\caption{2018--2022 averages (Stata): levels and shares used in benchmarking.}
+\label{tab:stata_levels_shares}
+\IfFileExists{outputs/stata/tables/tableS_levels_shares_2018_2022_stata.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{3.5pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={country_code,avg_4300_pct_gdp,avg_4300_share_total,avg_4300_share_4000,avg_4200_share_4000},
+  columns/country_code/.style={string type, column name=Code},
+  columns/avg_4300_pct_gdp/.style={column name={$T_{4300}$ (\% GDP)}, fixed, precision=4},
+  columns/avg_4300_share_total/.style={column name={\shortstack{4300 share\\total tax (\%)}}, fixed, precision=4},
+  columns/avg_4300_share_4000/.style={column name={\shortstack{4300 within\\4000 (\%)}}, fixed, precision=4},
+  columns/avg_4200_share_4000/.style={column name={\shortstack{4200 within\\4000 (\%)}}, fixed, precision=4}
+]{outputs/stata/tables/tableS_levels_shares_2018_2022_stata.csv}
+\end{FitTable}
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableS_levels_shares_2018_2022_stata.csv}}}}
+}
+\end{table}
+
+\clearpage % keep Table 9 on its own page (improves readability)
+
+\begin{table}[!htbp]
+\centering
+\caption{2018--2022 split within 4300 (Stata): inheritance vs gifts (where available).}
+\label{tab:stata_split}
+\IfFileExists{outputs/stata/tables/tableT_split_4310_4320_2018_2022_stata.csv}{
+\begingroup
+\catcode`\%=12\relax
+\catcode`\_=12\relax
+\setlength{\tabcolsep}{4pt}
+\begin{FitTable}
+\pgfplotstabletypeset[
+  col sep=comma,
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule},
+  columns={country_code,sh_inherit_or_resid,sh_gifts_or_resid,sh_gifts_reported},
+  columns/country_code/.style={string type, column name=Code},
+  columns/sh_inherit_or_resid/.style={column name={Inheritance/residual (\%)}, fixed, precision=4},
+  columns/sh_gifts_or_resid/.style={column name={Gifts/residual (\%)}, fixed, precision=4},
+  columns/sh_gifts_reported/.style={column name={Gifts reported (\%)}, fixed, precision=4}
+]{outputs/stata/tables/tableT_split_4310_4320_2018_2022_stata.csv}
+\end{FitTable}
+
+\par\normalsize\emph{Note:} The OECD sub-code 4320 (inter-vivos gifts) is not consistently reported. When a separate gifts series is unavailable, the inheritance--gifts split should be interpreted as residual / not separately identified.
+\endgroup
+}{
+\noindent\fbox{\parbox{\linewidth}{Missing file: \texttt{\detokenize{outputs/stata/tables/tableT_split_4310_4320_2018_2022_stata.csv}}}}
+}
+\end{table}
+
+\end{document}
