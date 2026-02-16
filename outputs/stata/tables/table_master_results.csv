@@ -1,0 +1,13 @@
+block,outcome,period,item,estimate,se,p_value,N,note
+"Descriptives","T_4300","2018-2022","CHE inheritance share in 4300 (%)",100,,,,"from Table T"
+"Descriptives","T_4300","2018-2022","CHE gifts share in 4300 (%)",0,,,,"from Table T"
+"Two-way FE","T_4300","1990-2022","FE + year FE (cluster); term=CHE x trend",-.00436765,.00077068,1.773e-06,1219,"baseline spec"
+"Two-way FE","share4300_total","1990-2022","FE + year FE (cluster); term=CHE x trend",-.01827751,.00223249,7.923e-10,1219,"baseline spec"
+"Hausman","T_4300","1990-2022","Hausman FE vs RE (simple; chi2)",7.5356075,2,.02310275,,"estimate=chi2; se=df"
+"CRE/Mundlak","T_4300","1990-2022","Joint test of unit-mean terms (p)",,,.02270743,1219,"p_value only"
+"Hausman","share4300_total","1990-2022","Hausman FE vs RE (simple; chi2)",10.279307,2,.00585972,,"estimate=chi2; se=df"
+"CRE/Mundlak","share4300_total","1990-2022","Joint test of unit-mean terms (p)",,,.00565652,1219,"p_value only"
+"Placebo","T_4300","1990-2022","Exact randomization p (two-sided); diff=CHE-ot",.08741912,,.66666667,,"estimate=diff; p_value=p_exact"
+"Placebo","T_4300","2018-2022","Exact randomization p (two-sided); diff=CHE-ot",.04338919,,.8974359,,"estimate=diff; p_value=p_exact"
+"Placebo","share4300_total","1990-2022","Exact randomization p (two-sided); diff=CHE-ot",.4466867,,.17948718,,"estimate=diff; p_value=p_exact"
+"Placebo","share4300_total","2018-2022","Exact randomization p (two-sided); diff=CHE-ot",.2714427,,.79487179,,"estimate=diff; p_value=p_exact"

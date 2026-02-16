@@ -1,0 +1,7 @@
+outcome,estimator,term,b,se,p,N
+"T_4300","FE + year FE (cluster)","CHE x trend",-.00436765,.00077068,1.773e-06,1219
+"T_4300","RE + year FE (cluster)","CHE x trend",-.00422816,.00077047,4.070e-08,1219
+"T_4300","OLS + year FE (cluster)","CHE x trend",.00288533,.00118789,.02011801,1219
+"share4300_total","FE + year FE (cluster)","CHE x trend",-.01827751,.00223249,7.923e-10,1219
+"share4300_total","RE + year FE (cluster)","CHE x trend",-.01756636,.00221328,2.075e-15,1219
+"share4300_total","OLS + year FE (cluster)","CHE x trend",.01577455,.00322995,.00002019,1219

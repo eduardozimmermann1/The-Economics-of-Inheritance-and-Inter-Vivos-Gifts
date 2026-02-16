@@ -1,0 +1,15 @@
+variable,definition
+country_code,OECD reference area code (ISO3); includes OECD_REP aggregate
+country_name,OECD reference area name (modal label per code)
+year,Calendar year
+`_T`,Total tax revenue (% of GDP)
+T_4000,Taxes on property (% of GDP)
+T_4200,Recurrent taxes on net wealth (% of GDP)
+T_4300,"Estate, inheritance and gift taxes (% of GDP)"
+T_4310,Estate and inheritance taxes (% of GDP)
+T_4320,Gift taxes (% of GDP)
+share_4300_total_tax_pct,T_4300 as share of total tax revenue (%)
+share_4300_in_property_pct,T_4300 as share of property taxes T_4000 (%)
+share_4200_in_property_pct,T_4200 as share of property taxes T_4000 (%)
+gift_share_within_4300,"T_4320 / T_4300 (share within 4300, if available)"
+inherit_share_within_4300,"T_4310 / T_4300 (share within 4300, if available)"

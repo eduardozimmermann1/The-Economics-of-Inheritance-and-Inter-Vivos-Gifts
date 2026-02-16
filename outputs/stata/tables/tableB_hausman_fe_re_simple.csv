@@ -1,0 +1,3 @@
+outcome,spec,chi2,df,p_value
+"T_4300","y ~ c_year + CHE*c_year; FE vs RE (simple)",7.5356075,2,.02310275
+"share4300_total","y ~ c_year + CHE*c_year; FE vs RE (simple)",10.279307,2,.00585972
